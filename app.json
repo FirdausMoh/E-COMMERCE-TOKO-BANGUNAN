@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Ryapp",
+    "slug": "RYAPP_v1",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
+    ],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/ICONZ.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/JAAA.png"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/ICONZ.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.fahrifirdauus.RYAPP_v1"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {}
+  }
+}
