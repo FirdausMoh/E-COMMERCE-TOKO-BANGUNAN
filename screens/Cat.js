@@ -8,7 +8,7 @@ import {
   Text,
   Center,
 } from "native-base";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, Dimensions, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ScreenTop } from "../components";
 import { useState, useEffect } from "react";
@@ -25,10 +25,30 @@ const Cat = () => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  // Get screen dimensions for responsive layout
+  const { width: screenWidth } = Dimensions.get('window');
+  
+  // Calculate responsive item width
+  const getItemWidth = () => {
+    if (screenWidth > 768) {
+      // Tablet - 4 columns
+      return (screenWidth - 60) / 4;
+    } else if (screenWidth > 414) {
+      // Large phone - 2 columns with better spacing
+      return (screenWidth - 50) / 2;
+    } else {
+      // Small phone - 2 columns
+      return (screenWidth - 40) / 2;
+    }
+  };
+
+  const itemWidth = getItemWidth();
+
   const formatToRupiah = (amount) => {
     return new Intl.NumberFormat("id-ID", { currency: "IDR" }).format(amount);
   };
-  const [filteredProducts, setFilteredProducts] = useState([]);
 
   useEffect(() => {
     const db = getDatabase();
@@ -53,7 +73,7 @@ const Cat = () => {
           });
 
           Promise.all(productList).then((updatedProducts) => {
-            // Filter products with category "galvalum"
+            // Filter products with category "Cat"
             const CatProducts = updatedProducts.filter(
               (product) => product.kategoriproduct === "Cat"
             );
@@ -66,45 +86,65 @@ const Cat = () => {
     fetchData();
   }, []);
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     return (
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Detail Product", { item: item })}
+      <Box 
+        alignItems="center" 
+        justifyContent="center"
+        mb={4}
+        px={1}
       >
-        <Box>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate("Detail Product", { item: item })}
+          style={{ alignSelf: 'center' }}
+        >
           <Box
-            shadow={5}
+            shadow={6}
             backgroundColor={"#FFFFFF"}
-            mx={Platform.OS === "ios" ? 2 : 3} //buat ios
-            my={2}
-            borderRadius={5}
+            borderRadius={12}
             flexDirection={"column"}
-            w={Platform.OS === "ios" ? 185 : 155} //buat ios
-            h={180}
+            w={itemWidth - 8}
+            h={200}
+            overflow="hidden"
+            borderWidth={0.5}
+            borderColor="gray.100"
           >
-            <Box backgroundColor={"gray.200"} py={2}>
-              <Center>
+            <Box backgroundColor={"gray.50"} py={3} flex={1}>
+              <Center flex={1}>
                 <Image
                   source={{ uri: item.gambar }}
-                  w="100"
-                  h="100"
+                  w={itemWidth - 40}
+                  h="110"
                   resizeMode="contain"
-                  alt="Image Data"
+                  alt="Product Image"
+                  borderRadius={8}
                 />
               </Center>
             </Box>
-            <Box p={2}>
-              <Text fontSize={"12"} fontWeight={"semibold"} color={"black"}>
+            
+            <Box p={3} backgroundColor="white">
+              <Text 
+                fontSize={"13"} 
+                fontWeight={"600"} 
+                color={"gray.800"}
+                numberOfLines={2}
+                textAlign="center"
+                mb={2}
+              >
                 {item.namaproduct}
               </Text>
-              <Heading mt={2} fontSize={"sm"} color={"#006664"}>
+              <Heading 
+                fontSize={"md"} 
+                color={"#006664"}
+                textAlign="center"
+              >
                 Rp {formatToRupiah(item.harga)}
               </Heading>
             </Box>
           </Box>
-        </Box>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Box>
     );
   };
 
@@ -115,10 +155,11 @@ const Cat = () => {
     );
     setFilteredProducts(filtered);
   };
+
   useEffect(() => {
     // Panggil filterData saat nilai searchText berubah
     filterData(searchText);
-  }, [searchText]);
+  }, [searchText, products]);
 
   return (
     <>
@@ -131,39 +172,67 @@ const Cat = () => {
             value={searchText}
             onChangeText={(text) => setSearchText(text)}
             w="100%"
-            h={10}
-            borderRadius={10}
+            h={12}
+            borderRadius={12}
             bgColor="white"
+            borderColor="gray.200"
+            borderWidth={1}
+            px={4}
+            fontSize={14}
+            shadow={2}
           />
-          {/* <TouchableOpacity onPress={() => navigation.navigate("Keranjang")}>
-            <Box
-              px={3}
-              py={2}
-              borderRadius={10}
-              bgColor="white"
-              shadow={5}
-              marginLeft={3}
-            >
-              <Ionicons name="cart-sharp" size={20} color="#006664" />
-            </Box>
-          </TouchableOpacity> */}
         </HStack>
-        <Box backgroundColor={"white"} py={3} mb={3}>
-          <Text ml={7} fontWeight={"bold"} color={"#006664"}>
+        
+        <Box backgroundColor={"white"} py={4} mb={2} shadow={1}>
+          <Text 
+            ml={7} 
+            fontWeight={"bold"} 
+            color={"#006664"}
+            fontSize={16}
+          >
             PRODUK KAMI
           </Text>
         </Box>
       </Box>
 
-      <FlatList
-        data={searchText ? filteredProducts : products}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-      />
+      <Center flex={1}>
+        <Box 
+          alignSelf="center" 
+          maxWidth={screenWidth - 20}
+          flex={1}
+        >
+          <FlatList
+            data={searchText ? filteredProducts : products}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            numColumns={screenWidth > 768 ? 4 : 2}
+            key={screenWidth > 768 ? 'four-columns' : 'two-columns'} // Force re-render when columns change
+            contentContainerStyle={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 10,
+              paddingBottom: 20,
+              paddingTop: 10
+            }}
+            columnWrapperStyle={
+              screenWidth > 768 
+                ? { justifyContent: 'space-evenly', marginBottom: 5 }
+                : { justifyContent: 'space-evenly', marginBottom: 5 }
+            }
+            ItemSeparatorComponent={() => <Box h={2} />}
+            ListEmptyComponent={() => (
+              <Center mt={20}>
+                <Text color="gray.500" fontSize={16}>
+                  Tidak ada produk ditemukan
+                </Text>
+              </Center>
+            )}
+          />
+        </Box>
+      </Center>
     </>
   );
 };
+
 export default Cat;
